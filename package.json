@@ -4,12 +4,13 @@
   "description": "a pblf made by GROUP2",
   "main": "main.js",
   "scripts": {
-    "start":"electron .",
+    "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "GROUP2",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^33.2.1"
+    "electron": "^33.2.1",
+    "node-loader": "^2.1.0"
   }
 }

@@ -1,6 +1,6 @@
 const { app, BrowserWindow } = require('electron/main')
 const path=require('path');
-const {fish_pictorial_book}=require();
+const fishlist=require('./app')
 app.on('ready',()=>
 {
     const win =new BrowserWindow(
@@ -15,3 +15,4 @@ app.on('ready',()=>
     )
     win.loadFile('./index.html')
 })
+
