@@ -72,20 +72,26 @@ void gameDraw()
     //to end drawing
 
 }
+void enemyMove();
+void bulletMove();
+void backMove();
+void planeMove();
+void shoot();
 void update()
 {
     enemyMove();
     bulletMove();
     backMove();
 }
-int main()
-{// init graph
+
+int main(int args, char *argv[])
+{ // init graph
     gameInit();
     while (true)
     {
         if(kbhit())
         {
-            planeMove;
+            planeMove();
         }
         //another need to write
     }
@@ -167,7 +173,7 @@ void enemyMove(){
 }
 void shoot()
 {
-    struct bullet* new_bullet=(struct bullet *)malloc(sizeof(struct));
+    struct bullet* new_bullet=(struct bullet *)malloc(sizeof(struct bullet*));
     new_bullet->x=playerPlane.x+30;
     new_bullet->y=playerPlane.y-20;
     new_bullet->next=playerPlane.my_bullet->next;
@@ -214,3 +220,5 @@ void bulletMove()
     }
     bullet_head=bullet_head->next;
 }}
+void backMove()
+{}
