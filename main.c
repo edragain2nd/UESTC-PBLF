@@ -148,3 +148,69 @@ newplane->y=0;
 newplane->next=enemyPlane->next;
 enemyPlane->next=newplane; 
 }
+void enemyMove(){
+    struct enemy* temp_enemyPlane=enemyPlane;
+    struct enemy* delete_enemyPlane;
+    while(temp_enemyPlane->next!=NULL)
+    {
+        temp_enemyPlane->next->y+=rand()%10;
+        if(temp_enemyPlane->next->y>=800)
+        {
+            delete_enemyPlane=temp_enemyPlane->next;
+            temp_enemyPlane->next=delete_enemyPlane->next;
+            free(delete_enemyPlane);
+            delete_enemyPlane=NULL;
+            continue;
+        }
+        temp_enemyPlane=temp_enemyPlane->next;
+    }
+}
+void shoot()
+{
+    struct bullet* new_bullet=(struct bullet *)malloc(sizeof(struct));
+    new_bullet->x=playerPlane.x+30;
+    new_bullet->y=playerPlane.y-20;
+    new_bullet->next=playerPlane.my_bullet->next;
+    playerPlane.my_bullet->next=new_bullet;
+}
+void bulletMove()
+{
+    struct bullet* bullet_head=playerPlane.my_bullet;
+    struct bullet* delete_bullet;
+    while(bullet_head->next!=NULL)
+    {
+        bullet_head->next->y-=10;
+        if(bullet_head->next->y<-50)
+        {
+            delete_bullet=bullet_head->next;
+            bullet_head->next=delete_bullet->next;
+            free(delete_bullet);
+            delete_bullet=NULL;
+            continue;
+        }
+    struct enemy* tmpEnemy=enemyPlane;
+    struct enemy* delete_enemy;
+    while(tmpEnemy->next!=NULL)
+    {
+        if((bullet_head->next->x>=tmpEnemy->next->x)&&(bullet_head->next->x<=tmpEnemy->next->x+80)&&(bullet_head->next->y<=tmpEnemy->next->y+100))
+        {
+            //load boom 
+            delete_enemy=tmpEnemy->next;
+            tmpEnemy->next=delete_enemy->next;
+            free(delete_enemy);
+            delete_enemy=NULL;
+            delete_bullet=bullet_head->next;
+            bullet_head->next=delete_bullet->next;
+            free(delete_bullet);
+            delete_bullet=NULL;
+        }
+        if(tmpEnemy->next==NULL)
+        {break;}
+        tmpEnemy=tmpEnemy->next;
+    }
+    if(bullet_head->next==NULL)
+    {
+        break;
+    }
+    bullet_head=bullet_head->next;
+}}
