@@ -1,6 +1,9 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <conio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 struct bullet
 {
@@ -13,6 +16,8 @@ struct plane
     int x;
     int y;
     bool still_live;
+    int lives;
+    int hit_count;
     struct  bullet* my_bullet;
 };
 struct enemy
@@ -30,6 +35,7 @@ void gameInit()
     playerPlane.x=700;
     playerPlane.y=300;
     playerPlane.still_live=true;
+    playerPlane.hit_count=0;
     //init bullet
     playerPlane.my_bullet=(struct bullet*)malloc(sizeof(struct bullet));
     playerPlane.my_bullet->next=NULL;
@@ -83,6 +89,7 @@ void update()
     bulletMove();
     backMove();
 }
+void check_hit();
 
 int main(int args, char *argv[])
 { // init graph
@@ -93,6 +100,9 @@ int main(int args, char *argv[])
         {
             planeMove();
         }
+        update();
+        check_hit();
+        gameDraw();
         //another need to write
     }
     
@@ -148,6 +158,8 @@ playerPlane.x=500;
 }
 void addenemyPlane()
 {
+srand(time(NULL));
+int x_random = rand()%501;
 struct enemy* newplane=(struct enemy*)malloc(sizeof(struct enemy*));
 newplane->x=500;//we need to make it random
 newplane->y=0;
@@ -222,3 +234,16 @@ void bulletMove()
 }}
 void backMove()
 {}
+void check_hit(){ 
+    struct enemy* tempEnemy = enemyPlane->next;
+    while(tempEnemy){
+        if(playerPlane.x < tempEnemy->x + 80 && playerPlane.x + 80 > tempEnemy->x && playerPlane.y < tempEnemy->y + 100 && playerPlane.y + 100 > tempEnemy->y){
+            playerPlane.hit_count++;        
+            if(playerPlane.hit_count>=3){
+                playerPlane.still_live = false;
+                printf("Game Over!小趴菜");
+                return;
+            }
+        }
+    }
+}
