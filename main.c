@@ -86,6 +86,13 @@ void update()
 
 int main(int args, char *argv[])
 { // init graph
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window *window=SDL_CreateWindow("plane game",
+                                        SDL_WINDOWPOS_UNDEFINED;
+                                        SDL_WINDOWPOS_UNDEFINED,
+                                        600,400,
+                                        0);
+    
     gameInit();
     while (true)
     {
@@ -95,7 +102,8 @@ int main(int args, char *argv[])
         }
         //another need to write
     }
-    
+    SDL_DestroyWindow(window);
+    SDL_QUIT;
     return 0;
 }
 
