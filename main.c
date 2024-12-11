@@ -99,10 +99,10 @@ int main(int args, char *argv[])
             planeMove();
         }
         //another need to write
+        update();
+        check_hit();
+        gameDraw();
     }
-    update();
-    check_hit();
-    gameDraw();
     
     return 0;
 }
