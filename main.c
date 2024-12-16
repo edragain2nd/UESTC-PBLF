@@ -55,36 +55,37 @@ int main(int args, char *argv[])
                               400, 600,
                               SDL_WINDOW_SHOWN);
 
-    SDL_Surface *background_surf = SDL_LoadBMP("./image/background.bmp");
     rr = SDL_CreateRenderer(window, -1, 0);
-    SDL_Texture *back_te = SDL_CreateTextureFromSurface(rr, background_surf);
-    SDL_RenderCopy(rr, back_te, NULL, NULL);
-    SDL_RenderPresent(rr);
     gameInit();
-    while (true)
+    bool quit = false;
+    SDL_Event e;
+    while (!quit)
     {
         end = GetTickCount();
         t2 = GetTickCount();
-        if (kbhit())
+        while (SDL_PollEvent(&e) != 0)
         {
-            planeMove();
+            if (e.type == SDL_QUIT)
+            {
+                quit = true;
+            }
         }
-        update();
-        check_hit();
-        gameDraw();
+        planeMove(); // 处理玩家移动
+        update();    // 更新游戏状态
+        check_hit(); // 检查碰撞
+        gameDraw();  // 绘制游戏画面
         if (end - begin >= 50)
         {
-            update();
-            begin = end;
+            SDL_Delay(50 - (GetTickCount() - end)); // 控制帧率
+            begin = GetTickCount();
         }
         if (t2 - t1 >= 3000)
         {
+             addenemyPlane();// 每3秒添加一个敌人
             t1 = t2;
         }
-        // another need to write
     }
-    SDL_FreeSurface(background_surf);
-    SDL_DestroyTexture(back_te);
+
     SDL_DestroyRenderer(rr);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -143,8 +144,8 @@ void addenemyPlane()
     srand(time(NULL));
     int x_random = rand() % 501;
     struct enemy *newplane = (struct enemy *)malloc(sizeof(struct enemy *));
-    newplane->x = 500; // we need to make it random
-    newplane->y = 0;
+    newplane->x = 170; // we need to make it random
+    newplane->y = 200;
     newplane->next = enemyPlane->next;
     enemyPlane->next = newplane;
 }
@@ -169,7 +170,7 @@ void enemyMove()
 void shoot()
 {
     struct bullet *new_bullet = (struct bullet *)malloc(sizeof(struct bullet *));
-    new_bullet->x = playerPlane.x + 30;
+    new_bullet->x = playerPlane.x ;
     new_bullet->y = playerPlane.y - 20;
     new_bullet->next = playerPlane.my_bullet->next;
     playerPlane.my_bullet->next = new_bullet;
@@ -255,15 +256,22 @@ void gameInit()
 }
 void gameDraw()
 {
+    SDL_RenderClear(rr);
     // start to draw background photo
+    SDL_Surface *background_surf = SDL_LoadBMP("./image/background.bmp");
     SDL_Surface *myp_surf = SDL_LoadBMP("./image/myplane.bmp");
     SDL_Surface *enp_surf = SDL_LoadBMP("./image/enemy.bmp");
+    SDL_Texture *back_te = SDL_CreateTextureFromSurface(rr, background_surf);
     SDL_Texture *mp_te = SDL_CreateTextureFromSurface(rr, myp_surf);
     SDL_Texture *en_te = SDL_CreateTextureFromSurface(rr, enp_surf);
+    
     SDL_SetTextureBlendMode(mp_te, SDL_BLENDMODE_BLEND);
     SDL_SetTextureBlendMode(en_te, SDL_BLENDMODE_BLEND);
     SDL_FreeSurface(myp_surf);
     SDL_FreeSurface(enp_surf);
+    SDL_FreeSurface(background_surf);
+
+    SDL_RenderCopy(rr, back_te, NULL, NULL);
     // if playPlane is alive,draw picture
     if (playerPlane.still_live)
     {
@@ -274,6 +282,7 @@ void gameDraw()
     {
         SDL_DestroyTexture(mp_te);
         SDL_DestroyTexture(en_te);
+        SDL_DestroyTexture(back_te);
         // still no draw gameover
     }
     // draw enemy
@@ -282,7 +291,7 @@ void gameDraw()
     {
         // draw picture
         SDL_Rect enplane_rect = {tempPlane->x, tempPlane->y, 50, 50};
-        SDL_RenderCopy(rr, en_te, NULL, NULL);
+        SDL_RenderCopy(rr, en_te, NULL, &enplane_rect);
         tempPlane = tempPlane->next;
     }
 
