@@ -44,18 +44,19 @@ void update()
 void check_hit();
 int begin, t1, end, t2;
 SDL_Window *window = NULL;
+SDL_Renderer *rr = NULL;
 int main(int args, char *argv[])
 { // init graph
 
     SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("plane game",
-                              SDL_WINDOWPOS_CENTERED,
-                              SDL_WINDOWPOS_CENTERED,
+                              400,
+                              400,
                               400, 600,
                               SDL_WINDOW_SHOWN);
 
     SDL_Surface *background_surf = SDL_LoadBMP("./image/background.bmp");
-    SDL_Renderer *rr = SDL_CreateRenderer(window, -1, 0);
+    rr = SDL_CreateRenderer(window, -1, 0);
     SDL_Texture *back_te = SDL_CreateTextureFromSurface(rr, background_surf);
     SDL_RenderCopy(rr, back_te, NULL, NULL);
     SDL_RenderPresent(rr);
@@ -236,8 +237,8 @@ void check_hit()
 void gameInit()
 {
     // init plane
-    playerPlane.x = 700;
-    playerPlane.y = 300;
+    playerPlane.x = 170;
+    playerPlane.y = 500;
     playerPlane.still_live = true;
     // init bullet
     playerPlane.my_bullet = (struct bullet *)malloc(sizeof(struct bullet));
@@ -255,22 +256,22 @@ void gameInit()
 void gameDraw()
 {
     // start to draw background photo
-    SDL_Renderer *rdr = SDL_CreateRenderer(window, -1, 0);
     SDL_Surface *myp_surf = SDL_LoadBMP("./image/myplane.bmp");
     SDL_Surface *enp_surf = SDL_LoadBMP("./image/enemy.bmp");
-    SDL_Texture *mp_te = SDL_CreateTextureFromSurface(rdr, myp_surf);
-    SDL_Texture *en_te = SDL_CreateTextureFromSurface(rdr, enp_surf);
+    SDL_Texture *mp_te = SDL_CreateTextureFromSurface(rr, myp_surf);
+    SDL_Texture *en_te = SDL_CreateTextureFromSurface(rr, enp_surf);
+    SDL_SetTextureBlendMode(mp_te, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(en_te, SDL_BLENDMODE_BLEND);
+    SDL_FreeSurface(myp_surf);
+    SDL_FreeSurface(enp_surf);
     // if playPlane is alive,draw picture
     if (playerPlane.still_live)
     {
         SDL_Rect myplane_rect = {playerPlane.x, playerPlane.y, 50, 50};
-        SDL_RenderCopy(rdr, mp_te, NULL, &myplane_rect);
+        SDL_RenderCopy(rr, mp_te, NULL, &myplane_rect);
     }
     else // draw game over
     {
-        SDL_DestroyRenderer(rdr);
-        SDL_FreeSurface(myp_surf);
-        SDL_FreeSurface(enp_surf);
         SDL_DestroyTexture(mp_te);
         SDL_DestroyTexture(en_te);
         // still no draw gameover
@@ -281,7 +282,7 @@ void gameDraw()
     {
         // draw picture
         SDL_Rect enplane_rect = {tempPlane->x, tempPlane->y, 50, 50};
-        SDL_RenderCopy(rdr, en_te, NULL, &enplane_rect);
+        SDL_RenderCopy(rr, en_te, NULL, NULL);
         tempPlane = tempPlane->next;
     }
 
@@ -294,5 +295,5 @@ void gameDraw()
         playerBullet = playerBullet->next;
     }
     // to end drawing
-    SDL_RenderPresent(rdr);
+    SDL_RenderPresent(rr);
 }
