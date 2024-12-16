@@ -31,23 +31,16 @@ void addenemyPlane();
 void gameDraw();
 void enemyMove();
 void bulletMove();
-void backMove();
-void planeMove();
+void planeMove(SDL_Event e);
 void shoot();
 void gameInit();
-void update()
-{
-    enemyMove();
-    bulletMove();
-    backMove();
-}
 void check_hit();
+void update();
 int begin, t1, end, t2;
 SDL_Window *window = NULL;
 SDL_Renderer *rr = NULL;
 int main(int args, char *argv[])
 { // init graph
-
     SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("plane game",
                               400,
@@ -69,19 +62,22 @@ int main(int args, char *argv[])
             {
                 quit = true;
             }
-        }
-        planeMove(); // 处理玩家移动
+            else if (e.type == SDL_KEYDOWN)
+            {
+                planeMove(e); // 处理玩家移动
+            }
+        } 
         update();    // 更新游戏状态
         check_hit(); // 检查碰撞
         gameDraw();  // 绘制游戏画面
         if (end - begin >= 50)
         {
-            SDL_Delay(50 - (GetTickCount() - end)); // 控制帧率
+            SDL_Delay(50); // 控制帧率
             begin = GetTickCount();
         }
-        if (t2 - t1 >= 3000)
+        if (t2 - t1 >= 2000)
         {
-             addenemyPlane();// 每3秒添加一个敌人
+            addenemyPlane(); // 每3秒添加一个敌人
             t1 = t2;
         }
     }
@@ -92,48 +88,43 @@ int main(int args, char *argv[])
     return 0;
 }
 
-void planeMove()
+void planeMove(SDL_Event e)
 {
-    char command = getch();
-    switch (command)
+    switch (e.key.keysym.sym)
     {
-    case 72:
-    case 'W':
-    case 'w':
+    case SDLK_w:
+    case SDLK_UP:
         playerPlane.y = playerPlane.y - 20;
         if (playerPlane.y == 0)
         {
             playerPlane.y = 0;
         }
         break;
-    case 80:
-    case 'S':
-    case 's':
+    case SDLK_s:
+    case SDLK_DOWN:
         playerPlane.y = playerPlane.y + 20;
-        if (playerPlane.y > 700)
+        if (playerPlane.y > 600)
         {
-            playerPlane.y = 700;
+            playerPlane.y = 600;
         }
         break;
-    case 75:
-    case 'A':
-    case 'a':
+    case SDLK_a:
+    case SDLK_LEFT:
         playerPlane.x = playerPlane.x - 20;
         if (playerPlane.x < 0)
         {
             playerPlane.x = 0;
         }
         break;
-    case 77:
-    case 'D':
-    case 'd':
+    case SDLK_RIGHT:
+    case SDLK_d:
         playerPlane.x = playerPlane.x + 20;
-        if (playerPlane.x > 500)
+        if (playerPlane.x > 400)
         {
-            playerPlane.x = 500;
+            playerPlane.x = 400;
         }
         break;
-    case 32:
+    case SDLK_SPACE:
         shoot();
         break;
         // we can add new command to make it have more fearture
@@ -142,10 +133,10 @@ void planeMove()
 void addenemyPlane()
 {
     srand(time(NULL));
-    int x_random = rand() % 501;
+    int x_random = rand() % 401;
     struct enemy *newplane = (struct enemy *)malloc(sizeof(struct enemy *));
-    newplane->x = 170; // we need to make it random
-    newplane->y = 200;
+    newplane->x = x_random; // we need to make it random
+    newplane->y = 50;
     newplane->next = enemyPlane->next;
     enemyPlane->next = newplane;
 }
@@ -155,7 +146,7 @@ void enemyMove()
     struct enemy *delete_enemyPlane;
     while (temp_enemyPlane->next != NULL)
     {
-        temp_enemyPlane->next->y += rand() % 10;
+        temp_enemyPlane->next->y += rand() % 4;
         if (temp_enemyPlane->next->y >= 800)
         {
             delete_enemyPlane = temp_enemyPlane->next;
@@ -170,8 +161,8 @@ void enemyMove()
 void shoot()
 {
     struct bullet *new_bullet = (struct bullet *)malloc(sizeof(struct bullet *));
-    new_bullet->x = playerPlane.x ;
-    new_bullet->y = playerPlane.y - 20;
+    new_bullet->x = playerPlane.x;
+    new_bullet->y = playerPlane.y - 5;
     new_bullet->next = playerPlane.my_bullet->next;
     playerPlane.my_bullet->next = new_bullet;
 }
@@ -181,8 +172,8 @@ void bulletMove()
     struct bullet *delete_bullet;
     while (bullet_head->next != NULL)
     {
-        bullet_head->next->y -= 10;
-        if (bullet_head->next->y < -50)
+        bullet_head->next->y -= 4;
+        if (bullet_head->next->y < 0)
         {
             delete_bullet = bullet_head->next;
             bullet_head->next = delete_bullet->next;
@@ -219,15 +210,12 @@ void bulletMove()
         bullet_head = bullet_head->next;
     }
 }
-void backMove()
-{
-}
 void check_hit()
 {
     struct enemy *tempEnemy = enemyPlane->next;
     while (tempEnemy)
     {
-        if (playerPlane.x < tempEnemy->x + 80 && playerPlane.x + 80 > tempEnemy->x && playerPlane.y < tempEnemy->y + 100 && playerPlane.y + 100 > tempEnemy->y)
+        if (playerPlane.x < tempEnemy->x + 50 && playerPlane.x + 50 > tempEnemy->x && playerPlane.y < tempEnemy->y + 50 && playerPlane.y + 50 > tempEnemy->y)
         {
             playerPlane.still_live = false;
             break;
@@ -261,15 +249,18 @@ void gameDraw()
     SDL_Surface *background_surf = SDL_LoadBMP("./image/background.bmp");
     SDL_Surface *myp_surf = SDL_LoadBMP("./image/myplane.bmp");
     SDL_Surface *enp_surf = SDL_LoadBMP("./image/enemy.bmp");
+    SDL_Surface *bull_surf = SDL_LoadBMP("./image/bullet.bmp");
     SDL_Texture *back_te = SDL_CreateTextureFromSurface(rr, background_surf);
     SDL_Texture *mp_te = SDL_CreateTextureFromSurface(rr, myp_surf);
     SDL_Texture *en_te = SDL_CreateTextureFromSurface(rr, enp_surf);
-    
+    SDL_Texture *bull_te = SDL_CreateTextureFromSurface(rr, bull_surf);
     SDL_SetTextureBlendMode(mp_te, SDL_BLENDMODE_BLEND);
     SDL_SetTextureBlendMode(en_te, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(bull_te, SDL_BLENDMODE_BLEND);
     SDL_FreeSurface(myp_surf);
     SDL_FreeSurface(enp_surf);
     SDL_FreeSurface(background_surf);
+    SDL_FreeSurface(bull_surf);
 
     SDL_RenderCopy(rr, back_te, NULL, NULL);
     // if playPlane is alive,draw picture
@@ -280,9 +271,11 @@ void gameDraw()
     }
     else // draw game over
     {
+    
         SDL_DestroyTexture(mp_te);
         SDL_DestroyTexture(en_te);
         SDL_DestroyTexture(back_te);
+        SDL_DestroyTexture(bull_te);
         // still no draw gameover
     }
     // draw enemy
@@ -300,9 +293,15 @@ void gameDraw()
     while (playerBullet)
     {
         // draw picture
-
+        SDL_Rect bull_rect = {playerBullet->x, playerBullet->y, 20, 20};
+        SDL_RenderCopy(rr, bull_te, NULL, &bull_rect);
         playerBullet = playerBullet->next;
     }
     // to end drawing
     SDL_RenderPresent(rr);
+}
+void update()
+{
+    enemyMove();
+    bulletMove();
 }
