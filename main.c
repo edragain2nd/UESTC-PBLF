@@ -1,10 +1,12 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdbool.h>
 #include <conio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <windows.h>
+#undef main
 struct bullet
 {
     int x;
@@ -36,20 +38,24 @@ void shoot();
 void gameInit();
 void check_hit();
 void update();
+void restart(SDL_Event e);
+void music();
 int begin, t1, end, t2;
 SDL_Window *window = NULL;
 SDL_Renderer *rr = NULL;
 int main(int args, char *argv[])
 { // init graph
     SDL_Init(SDL_INIT_VIDEO);
+    Mix_Init(MIX_INIT_MP3);
     window = SDL_CreateWindow("plane game",
-                              400,
-                              400,
+                              500,
+                              150,
                               400, 600,
                               SDL_WINDOW_SHOWN);
 
     rr = SDL_CreateRenderer(window, -1, 0);
     gameInit();
+    music();
     bool quit = false;
     SDL_Event e;
     while (!quit)
@@ -82,6 +88,8 @@ int main(int args, char *argv[])
         }
     }
 
+    //Mix_FreeMusic(bgm);
+    Mix_CloseAudio();
     SDL_DestroyRenderer(rr);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -161,7 +169,7 @@ void enemyMove()
 void shoot()
 {
     struct bullet *new_bullet = (struct bullet *)malloc(sizeof(struct bullet *));
-    new_bullet->x = playerPlane.x;
+    new_bullet->x = playerPlane.x + 15;
     new_bullet->y = playerPlane.y - 5;
     new_bullet->next = playerPlane.my_bullet->next;
     playerPlane.my_bullet->next = new_bullet;
@@ -185,7 +193,7 @@ void bulletMove()
         struct enemy *delete_enemy;
         while (tmpEnemy->next != NULL)
         {
-            if ((bullet_head->next->x >= tmpEnemy->next->x) && (bullet_head->next->x <= tmpEnemy->next->x + 80) && (bullet_head->next->y <= tmpEnemy->next->y + 100))
+            if ((bullet_head->next->x >= tmpEnemy->next->x) && (bullet_head->next->x <= tmpEnemy->next->x + 80) && (bullet_head->next->y <= tmpEnemy->next->y + 40))
             {
                 // load boom
                 delete_enemy = tmpEnemy->next;
@@ -222,6 +230,23 @@ void check_hit()
         }
         tempEnemy = tempEnemy->next;
     }
+    SDL_Event e;
+    restart(e);
+}
+void restart(SDL_Event e)
+{
+    // restart the game
+    switch (e.key.keysym.sym)
+    {
+    case SDLK_r:
+        gameInit();
+    }
+}   //这里有问题，restart不好用
+void music()
+{
+    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,MIX_DEFAULT_FORMAT,MIX_DEFAULT_CHANNELS,2048);
+    Mix_Music *bgm=Mix_LoadMUS("./image/bgm.mp3");
+    Mix_PlayMusic(bgm,1);
 }
 void gameInit()
 {
@@ -250,17 +275,21 @@ void gameDraw()
     SDL_Surface *myp_surf = SDL_LoadBMP("./image/myplane.bmp");
     SDL_Surface *enp_surf = SDL_LoadBMP("./image/enemy.bmp");
     SDL_Surface *bull_surf = SDL_LoadBMP("./image/bullet.bmp");
+    SDL_Surface *go_surf = SDL_LoadBMP("./image/gameover.bmp");
     SDL_Texture *back_te = SDL_CreateTextureFromSurface(rr, background_surf);
     SDL_Texture *mp_te = SDL_CreateTextureFromSurface(rr, myp_surf);
     SDL_Texture *en_te = SDL_CreateTextureFromSurface(rr, enp_surf);
     SDL_Texture *bull_te = SDL_CreateTextureFromSurface(rr, bull_surf);
+    SDL_Texture *go_te = SDL_CreateTextureFromSurface(rr, go_surf);
     SDL_SetTextureBlendMode(mp_te, SDL_BLENDMODE_BLEND);
     SDL_SetTextureBlendMode(en_te, SDL_BLENDMODE_BLEND);
     SDL_SetTextureBlendMode(bull_te, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(go_te, SDL_BLENDMODE_BLEND);
     SDL_FreeSurface(myp_surf);
     SDL_FreeSurface(enp_surf);
     SDL_FreeSurface(background_surf);
     SDL_FreeSurface(bull_surf);
+    SDL_FreeSurface(go_surf);
 
     SDL_RenderCopy(rr, back_te, NULL, NULL);
     // if playPlane is alive,draw picture
@@ -276,7 +305,8 @@ void gameDraw()
         SDL_DestroyTexture(en_te);
         SDL_DestroyTexture(back_te);
         SDL_DestroyTexture(bull_te);
-        // still no draw gameover
+        SDL_Rect gameover_rect = {50, 200, 300, 150};   // draw game over
+        SDL_RenderCopy(rr, go_te, NULL, &gameover_rect);
     }
     // draw enemy
     struct enemy *tempPlane = enemyPlane->next;
