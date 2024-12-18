@@ -20,6 +20,7 @@ struct plane
     bool still_live;
     int lives;
     struct bullet *my_bullet;
+    
 };
 struct enemy
 {
@@ -38,15 +39,15 @@ void shoot();
 void gameInit();
 void check_hit();
 void update();
-void restart(SDL_Event e);
 void music();
 int begin, t1, end, t2;
 SDL_Window *window = NULL;
 SDL_Renderer *rr = NULL;
 int main(int args, char *argv[])
 { // init graph
+
     SDL_Init(SDL_INIT_VIDEO);
-    Mix_Init(MIX_INIT_MP3);
+    //Mix_Init(MIX_INIT_MP3);
     window = SDL_CreateWindow("plane game",
                               500,
                               150,
@@ -70,7 +71,8 @@ int main(int args, char *argv[])
             }
             else if (e.type == SDL_KEYDOWN)
             {
-                planeMove(e); // 处理玩家移动
+               planeMove(e); // 处理玩家移动
+                
             }
         } 
         update();    // 更新游戏状态
@@ -88,8 +90,8 @@ int main(int args, char *argv[])
         }
     }
 
-    //Mix_FreeMusic(bgm);
-    Mix_CloseAudio();
+    Mix_FreeMusic(bgm);
+   Mix_CloseAudio();
     SDL_DestroyRenderer(rr);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -136,12 +138,17 @@ void planeMove(SDL_Event e)
         shoot();
         break;
         // we can add new command to make it have more fearture
+    case SDLK_r:// restart function
+        gameInit();
+        break;
     }
 }
 void addenemyPlane()
 {
-    srand(time(NULL));
-    int x_random = rand() % 401;
+    srand((unsigned)time(NULL));
+    int a[5]={-30,-50,0,60,90};
+    int b=rand()%5;
+    int x_random = rand() % 401+a[b];
     struct enemy *newplane = (struct enemy *)malloc(sizeof(struct enemy *));
     newplane->x = x_random; // we need to make it random
     newplane->y = 50;
@@ -230,24 +237,13 @@ void check_hit()
         }
         tempEnemy = tempEnemy->next;
     }
-    SDL_Event e;
-    restart(e);
 }
-void restart(SDL_Event e)
-{
-    // restart the game
-    switch (e.key.keysym.sym)
-    {
-    case SDLK_r:
-        gameInit();
-    }
-}   //这里有问题，restart不好用
-void music()
-{
-    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,MIX_DEFAULT_FORMAT,MIX_DEFAULT_CHANNELS,2048);
-    Mix_Music *bgm=Mix_LoadMUS("./image/bgm.mp3");
-    Mix_PlayMusic(bgm,1);
-}
+ void music()
+ {
+ Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,MIX_DEFAULT_FORMAT,MIX_DEFAULT_CHANNELS,2048);
+ Mix_Music *bgm=Mix_LoadMUS("./image/bgm.mp3");
+  Mix_PlayMusic(bgm,1);
+ }
 void gameInit()
 {
     // init plane
