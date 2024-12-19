@@ -1,5 +1,5 @@
 #include <SDL2/SDL.h>
-// #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdbool.h>
 #include <conio.h>
 #include <stdio.h>
@@ -44,12 +44,12 @@ void music();
 int begin, t1, end, t2;
 SDL_Window *window = NULL;
 SDL_Renderer *rr = NULL;
-int most_enemy=0;
+int most_enemy = 0;
 int main(int args, char *argv[])
 { // init graph
 
     SDL_Init(SDL_INIT_VIDEO);
-    // Mix_Init(MIX_INIT_MP3);
+    Mix_Init(MIX_INIT_MP3);
     window = SDL_CreateWindow("plane game",
                               500,
                               150,
@@ -58,7 +58,7 @@ int main(int args, char *argv[])
 
     rr = SDL_CreateRenderer(window, -1, 0);
     gameInit();
-    // music();
+    music();
     bool quit = false;
     SDL_Event e;
     while (!quit)
@@ -91,8 +91,8 @@ int main(int args, char *argv[])
         }
     }
 
-    // Mix_FreeMusic(bgm);
-    //  Mix_CloseAudio();
+    Mix_FreeMusic(bgm);
+     Mix_CloseAudio();
     SDL_DestroyRenderer(rr);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -152,20 +152,24 @@ void planeMove(SDL_Event e)
 }
 void addenemyPlane()
 {
-   if(most_enemy<4)
-   {
-     srand((unsigned)time(NULL));
-    int a[5] = {-30, -50, 0, 60, 90};
-    int b = rand() % 5;
-    int x_random = rand() % 401 + a[b];
-    int enemykind = rand() % 3; // show enemykind
-    struct enemy *newplane = (struct enemy *)malloc(sizeof(struct enemy *));
-    newplane->x = x_random; // we need to make it random
-    newplane->y = 50;
-    newplane->next = enemyPlane->next;
-    enemyPlane->next = newplane;
-most_enemy++;
-   }
+    if (most_enemy < 4)
+    {
+        srand((unsigned)time(NULL));
+        int a[5] = {-30, -50, 0, 60, 90};
+        int b = rand() % 5;
+        int x_random = rand() % 401 + a[b];
+        if (x_random > 550)
+            x_random = 550;
+        if (x_random < 50)
+            x_random = 50;
+        int enemykind = rand() % 43; // show enemykind make it more random
+        struct enemy *newplane = (struct enemy *)malloc(sizeof(struct enemy *));
+        newplane->x = x_random; // we need to make it random
+        newplane->y = 50;
+        newplane->next = enemyPlane->next;
+        enemyPlane->next = newplane;
+        most_enemy++;
+    }
 }
 void enemyMove()
 {
@@ -253,12 +257,12 @@ void check_hit()
         tempEnemy = tempEnemy->next;
     }
 }
-//  void music()
-//  {
-//  Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,MIX_DEFAULT_FORMAT,MIX_DEFAULT_CHANNELS,2048);
-//  Mix_Music *bgm=Mix_LoadMUS("./image/bgm.mp3");
-//   Mix_PlayMusic(bgm,1);
-//  }
+ void music()
+ {
+ Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,MIX_DEFAULT_FORMAT,MIX_DEFAULT_CHANNELS,2048);
+ Mix_Music *bgm=Mix_LoadMUS("./image/bgm.mp3");
+  Mix_PlayMusic(bgm,1);
+ }
 void gameInit()
 {
     // init plane
@@ -288,7 +292,7 @@ void gameDraw()
     SDL_Surface *myp_surf = NULL;
     SDL_Surface *enp_surf = NULL;
     SDL_Surface *bull_surf = NULL;
-    SDL_Surface *go_surf = SDL_LoadBMP("./image/gameover.bmp");
+    SDL_Surface *go_surf = SDL_LoadBMP("./image/gameover1.bmp");
 
     if (playerPlane.score > 5) // 升级
     {
@@ -339,7 +343,6 @@ void gameDraw()
         SDL_Rect myplane_rect = {playerPlane.x, playerPlane.y, 50, 67};
         SDL_RenderCopy(rr, mp_te, NULL, &myplane_rect);
         SDL_FreeSurface(myp_surf);
-        
         SDL_DestroyTexture(back_te);
         SDL_DestroyTexture(bull_te);
         SDL_Rect gameover_rect = {50, 200, 300, 150}; // draw game over
@@ -349,6 +352,7 @@ void gameDraw()
     struct enemy *tempPlane = enemyPlane->next;
     while (tempPlane)
     {
+        tempPlane->enemykind = (4 + enemyPlane->enemykind) % 3;
         if (tempPlane->enemykind == 0)
             enp_surf = SDL_LoadBMP("./image/enemy1.bmp");
         else if (tempPlane->enemykind == 1)
