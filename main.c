@@ -1,5 +1,5 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
+// #include <SDL2/SDL_mixer.h>
 #include <stdbool.h>
 #include <conio.h>
 #include <stdio.h>
@@ -45,11 +45,13 @@ int begin, t1, end, t2;
 SDL_Window *window = NULL;
 SDL_Renderer *rr = NULL;
 int most_enemy = 0;
+const int FPS = 1000 / 20;
+Uint32 _FPS_Timer;
 int main(int args, char *argv[])
 { // init graph
 
     SDL_Init(SDL_INIT_VIDEO);
-    Mix_Init(MIX_INIT_MP3);
+    // Mix_Init(MIX_INIT_MP3);
     window = SDL_CreateWindow("plane game",
                               500,
                               150,
@@ -58,7 +60,7 @@ int main(int args, char *argv[])
 
     rr = SDL_CreateRenderer(window, -1, 0);
     gameInit();
-    music();
+    // music();
     bool quit = false;
     SDL_Event e;
     while (!quit)
@@ -79,20 +81,20 @@ int main(int args, char *argv[])
         update();    // 更新游戏状态
         check_hit(); // 检查碰撞
         gameDraw();  // 绘制游戏画面
-        if (end - begin >= 50)
+        if (SDL_GetTicks() - _FPS_Timer < FPS)
         {
-            SDL_Delay(100); // 控制帧率
-            begin = GetTickCount();
+            SDL_Delay(FPS - SDL_GetTicks() + _FPS_Timer);
         }
+        _FPS_Timer = SDL_GetTicks();
         if (t2 - t1 >= 2000)
         {
-            addenemyPlane(); // 每3秒添加一个敌人
+            addenemyPlane(); 
             t1 = t2;
         }
     }
 
-    Mix_FreeMusic(bgm);
-     Mix_CloseAudio();
+    // Mix_FreeMusic(bgm);
+    //  Mix_CloseAudio();
     SDL_DestroyRenderer(rr);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -177,7 +179,7 @@ void enemyMove()
     struct enemy *delete_enemyPlane;
     while (temp_enemyPlane->next != NULL)
     {
-        temp_enemyPlane->next->y += rand() % 4;
+        temp_enemyPlane->next->y += rand() % 10;
         if (temp_enemyPlane->next->y >= 800)
         {
             delete_enemyPlane = temp_enemyPlane->next;
@@ -203,7 +205,7 @@ void bulletMove()
     struct bullet *delete_bullet;
     while (bullet_head->next != NULL)
     {
-        bullet_head->next->y -= 4;
+        bullet_head->next->y -= 10;
         if (bullet_head->next->y < 0)
         {
             delete_bullet = bullet_head->next;
@@ -257,12 +259,12 @@ void check_hit()
         tempEnemy = tempEnemy->next;
     }
 }
- void music()
- {
- Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,MIX_DEFAULT_FORMAT,MIX_DEFAULT_CHANNELS,2048);
- Mix_Music *bgm=Mix_LoadMUS("./image/bgm.mp3");
-  Mix_PlayMusic(bgm,1);
- }
+//  void music()
+//  {
+//  Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,MIX_DEFAULT_FORMAT,MIX_DEFAULT_CHANNELS,2048);
+//  Mix_Music *bgm=Mix_LoadMUS("./image/bgm.mp3");
+//   Mix_PlayMusic(bgm,1);
+//  }
 void gameInit()
 {
     // init plane
