@@ -40,7 +40,8 @@ void shoot();
 void gameInit();
 void check_hit();
 void update();
-void music();
+// void music();
+void gamerestart();
 int begin, t1, end, t2;
 SDL_Window *window = NULL;
 SDL_Renderer *rr = NULL;
@@ -142,7 +143,7 @@ void planeMove(SDL_Event e)
         break;
         // we can add new command to make it have more fearture
     case SDLK_r: // restart function
-        gameInit();
+      gamerestart();
         break;
     case SDLK_o:
         playerPlane.score += 2;
@@ -160,16 +161,18 @@ void addenemyPlane()
         int a[5] = {-30, -50, 0, 60, 90};
         int b = rand() % 5;
         int x_random = rand() % 401 + a[b];
-        if (x_random > 550)
-            x_random = 550;
+        if (x_random > 350)
+            x_random = 350;
         if (x_random < 50)
             x_random = 50;
-        int enemykind = rand() % 43; // show enemykind make it more random
+        
+       
         struct enemy *newplane = (struct enemy *)malloc(sizeof(struct enemy *));
         newplane->x = x_random; // we need to make it random
         newplane->y = 50;
         newplane->next = enemyPlane->next;
         enemyPlane->next = newplane;
+         newplane->enemykind = rand()%3;
         most_enemy++;
     }
 }
@@ -354,7 +357,6 @@ void gameDraw()
     struct enemy *tempPlane = enemyPlane->next;
     while (tempPlane)
     {
-        tempPlane->enemykind = (4 + enemyPlane->enemykind) % 3;
         if (tempPlane->enemykind == 0)
             enp_surf = SDL_LoadBMP("./image/enemy1.bmp");
         else if (tempPlane->enemykind == 1)
@@ -381,6 +383,67 @@ void gameDraw()
     }
     // to end drawing
     SDL_RenderPresent(rr);
+}
+void gamerestart()
+{
+  // 删除所有飞机
+  struct enemy *tempEnemy = enemyPlane->next;
+  struct enemy *deleteEnemy;
+  while (tempEnemy != NULL)
+  {
+    deleteEnemy = tempEnemy;
+    tempEnemy = tempEnemy->next;
+    free(deleteEnemy);
+  }
+  enemyPlane->next = NULL; // 清空敌人链表
+
+  // 清除所有子弹
+  struct bullet *tempBullet = playerPlane.my_bullet->next;
+  struct bullet *deleteBullet;
+  while (tempBullet != NULL)
+  {
+    deleteBullet = tempBullet;
+    tempBullet = tempBullet->next;
+    free(deleteBullet);
+  }
+  playerPlane.my_bullet->next = NULL; // 清空子弹链表
+
+  // 初始化玩家飞机
+  playerPlane.x = 170;
+  playerPlane.y = 500;
+  playerPlane.still_live = true;
+  playerPlane.score = 0; // 初始化分数为0
+
+  // 初始化子弹链表
+  playerPlane.my_bullet = (struct bullet *)malloc(sizeof(struct bullet));
+  if (!playerPlane.my_bullet)
+  {
+    printf("Failed to allocate memory for bullets\n");
+    exit(1); // 退出程序或进行其他错误处理
+  }
+  playerPlane.my_bullet->next = NULL;
+
+  // 初始化敌人链表
+  if (enemyPlane)
+  {
+    free(enemyPlane);
+  }
+  enemyPlane = (struct enemy *)malloc(sizeof(struct enemy));
+  if (!enemyPlane)
+  {
+    printf("Failed to allocate memory for enemy plane\n");
+    exit(1); // 退出程序或进行其他错误处理
+  }
+  enemyPlane->x = 0;
+  enemyPlane->y = 0;
+  enemyPlane->next = NULL;
+
+  // 初始化时间
+  begin = GetTickCount();
+  t1 = GetTickCount();
+
+  // 重置敌人数量
+  most_enemy = 0;
 }
 void update()
 {
