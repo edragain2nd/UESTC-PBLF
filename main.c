@@ -48,6 +48,8 @@ SDL_Renderer *rr = NULL;
 int most_enemy = 0;
 const int FPS = 1000 / 20;
 Uint32 _FPS_Timer;
+TTF_Font *font = NULL;
+
 int main(int args, char *argv[])
 { // init graph
 
@@ -98,6 +100,11 @@ int main(int args, char *argv[])
     //  Mix_CloseAudio();
     SDL_DestroyRenderer(rr);
     SDL_DestroyWindow(window);
+    if (font) {
+        TTF_CloseFont(font);
+        font = NULL;
+    }
+    TTF_Quit();
     SDL_Quit();
     return 0;
 }
@@ -256,8 +263,12 @@ void check_hit()
     {
         if (playerPlane.x < tempEnemy->x + 50 && playerPlane.x + 50 > tempEnemy->x && playerPlane.y < tempEnemy->y + 50 && playerPlane.y + 50 > tempEnemy->y)
         {
-            playerPlane.still_live = false;
-            printf("Your score:%d", playerPlane.score);
+            playerPlane.lives--;
+            printf("Your score: %d\n",playerPlane.score);
+            if (playerPlane.lives <= 0){
+                playerPlane.still_live = false;
+                printf("Game Over!\n");
+            }            
             break;
         }
         tempEnemy = tempEnemy->next;
@@ -271,11 +282,15 @@ void check_hit()
 //  }
 void gameInit()
 {
+    // init font
+    font = TTF_OpenFont("C:/Windows/Fonts/arial.ttf", 28);
+    
     // init plane
     playerPlane.x = 170;
     playerPlane.y = 500;
     playerPlane.still_live = true;
     playerPlane.score = 0; // 初始化分数为0
+    playerPlane.lives = 3; //设置初始生命值为三
     // init bullet
     playerPlane.my_bullet = (struct bullet *)malloc(sizeof(struct bullet));
     playerPlane.my_bullet->next = NULL;
@@ -354,6 +369,14 @@ void gameDraw()
         SDL_Rect gameover_rect = {50, 200, 300, 150}; // draw game over
         SDL_RenderCopy(rr, go_te, NULL, &gameover_rect);
     }
+    // draw player's remaining lives
+    char life_text[10];
+    sprintf(life_text,"Lives: %d",playerPlane.lives);
+    SDL_Surface *life_surface = TTF_RenderText_Solid(font, life_text, SDL_Color{255, 255, 255});
+    SDL_Texture *life_texture = SDL_CreateTextureFromSurface(rr,life_surface);
+    SDL_Rect life_rect = {10,10,life_surface->w,life_surface->h};
+    SDL_RenderCopy(rr,life_texture,NULL,&life_rect);
+    
     // draw enemy
     struct enemy *tempPlane = enemyPlane->next;
     while (tempPlane)
