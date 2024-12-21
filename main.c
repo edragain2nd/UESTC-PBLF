@@ -18,10 +18,11 @@ struct plane
     int x;
     int y;
     bool still_live;
-    int lives;
-    int score; // 新增变量：杀敌数
+    int lives;  // 玩家生命值
+    int score;
     struct bullet *my_bullet;
 };
+
 struct enemy
 {
     int x;
@@ -48,8 +49,6 @@ SDL_Renderer *rr = NULL;
 int most_enemy = 0;
 const int FPS = 1000 / 20;
 Uint32 _FPS_Timer;
-TTF_Font *font = NULL;
-
 int main(int args, char *argv[])
 { // init graph
 
@@ -100,11 +99,6 @@ int main(int args, char *argv[])
     //  Mix_CloseAudio();
     SDL_DestroyRenderer(rr);
     SDL_DestroyWindow(window);
-    if (font) {
-        TTF_CloseFont(font);
-        font = NULL;
-    }
-    TTF_Quit();
     SDL_Quit();
     return 0;
 }
@@ -263,17 +257,27 @@ void check_hit()
     {
         if (playerPlane.x < tempEnemy->x + 50 && playerPlane.x + 50 > tempEnemy->x && playerPlane.y < tempEnemy->y + 50 && playerPlane.y + 50 > tempEnemy->y)
         {
-            playerPlane.lives--;
-            printf("Your score: %d\n",playerPlane.score);
-            if (playerPlane.lives <= 0){
+            // 玩家与敌机碰撞，减少生命值
+            playerPlane.lives--; // 减少生命
+
+            if (playerPlane.lives <= 0)
+            {
                 playerPlane.still_live = false;
-                printf("Game Over!\n");
-            }            
+                printf("Game Over! Your score: %d\n", playerPlane.score);
+                break; // 结束游戏
+            }
+
+            // 玩家仍然有生命，重新初始化飞机的位置
+            playerPlane.x = 170;
+            playerPlane.y = 500;
+
+            // 游戏继续
             break;
         }
         tempEnemy = tempEnemy->next;
     }
 }
+
 //  void music()
 //  {
 //  Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,MIX_DEFAULT_FORMAT,MIX_DEFAULT_CHANNELS,2048);
@@ -282,28 +286,28 @@ void check_hit()
 //  }
 void gameInit()
 {
-    // init font
-    font = TTF_OpenFont("C:/Windows/Fonts/arial.ttf", 28);
-    
     // init plane
     playerPlane.x = 170;
     playerPlane.y = 500;
     playerPlane.still_live = true;
     playerPlane.score = 0; // 初始化分数为0
-    playerPlane.lives = 3; //设置初始生命值为三
+    playerPlane.lives = 3; // 初始化生命值为3
+
     // init bullet
     playerPlane.my_bullet = (struct bullet *)malloc(sizeof(struct bullet));
     playerPlane.my_bullet->next = NULL;
+
     // init enemy
     enemyPlane = (struct enemy *)malloc(sizeof(struct enemy));
     enemyPlane->x = 0;
     enemyPlane->y = 0;
     enemyPlane->next = NULL;
+
     // init time
     begin = GetTickCount();
     t1 = GetTickCount();
-    // add enemy
 }
+
 void gameDraw()
 {
     SDL_RenderClear(rr);
@@ -369,14 +373,6 @@ void gameDraw()
         SDL_Rect gameover_rect = {50, 200, 300, 150}; // draw game over
         SDL_RenderCopy(rr, go_te, NULL, &gameover_rect);
     }
-    // draw player's remaining lives
-    char life_text[10];
-    sprintf(life_text,"Lives: %d",playerPlane.lives);
-    SDL_Surface *life_surface = TTF_RenderText_Solid(font, life_text, SDL_Color{255, 255, 255});
-    SDL_Texture *life_texture = SDL_CreateTextureFromSurface(rr,life_surface);
-    SDL_Rect life_rect = {10,10,life_surface->w,life_surface->h};
-    SDL_RenderCopy(rr,life_texture,NULL,&life_rect);
-    
     // draw enemy
     struct enemy *tempPlane = enemyPlane->next;
     while (tempPlane)
@@ -408,7 +404,6 @@ void gameDraw()
     // to end drawing
     SDL_RenderPresent(rr);
 }
-
 void gamerestart()
 {
   // 删除所有飞机
@@ -470,6 +465,7 @@ void gamerestart()
   // 重置敌人数量
   most_enemy = 0;
 }
+
 void update()
 {
     enemyMove();
